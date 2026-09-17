@@ -1,0 +1,3003 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Shop Pro</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+    --primary:#1a56db;
+    --primary-dark:#1e429f;
+    --primary-light:#ebf5ff;
+    --dark:#15171a;
+    --text:#24272b;
+    --muted:#737980;
+    --bg:#f6f7f9;
+    --card:#ffffff;
+    --border:#e7e9ec;
+    --danger:#dc2626;
+    --success:#16a34a;
+    --shadow-sm:0 2px 8px rgba(0,0,0,.06);
+    --shadow-md:0 8px 24px rgba(0,0,0,.08);
+    --shadow-lg:0 16px 40px rgba(0,0,0,.12);
+    --transition:.25s ease;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:auto;}
+body{font-family:'Inter','Kantumruy Pro',sans-serif;background:#eef0f3;color:var(--text);min-height:100vh;}
+button,input,textarea,select{font:inherit;}
+button{cursor:pointer;}
+
+.app{width:100%;max-width:1180px;min-height:100vh;margin:auto;background:var(--bg);position:relative;}
+
+/* ===== HEADER ===== */
+.header{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.header-inner{max-width:1180px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.brand{display:flex;align-items:center;gap:13px;}
+.brand-logo{width:48px;height:48px;border-radius:14px;background:linear-gradient(145deg,#1a56db,#1e429f);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 14px rgba(26,86,219,.35);}
+.brand-name{font-size:18px;font-weight:800;color:var(--dark);}
+.brand-subtitle{font-size:11px;color:var(--muted);margin-top:2px;}
+.header-actions{display:flex;align-items:center;gap:8px;}
+.icon-btn{width:42px;height:42px;border:1px solid var(--border);background:#1a56db;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;transition:var(--transition);}
+.icon-btn:hover{border-color:var(--primary-dark);color:#fff;background:var(--primary-dark);}
+.cart-btn{position:relative;}
+.cart-count{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:20px;background:#1e429f;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+
+/* ===== POSTER SECTION ===== */
+.poster-section{padding:18px 24px 8px;display:none;}
+.poster-section.visible{display:block;}
+.poster-slider{position:relative;width:100%;border-radius:18px;overflow:hidden;box-shadow:var(--shadow-md);background:#f0f1f3;}
+.poster-slide{position:relative;opacity:0;transition:opacity 0.5s ease;display:none;}
+.poster-slide.active{opacity:1;display:block;}
+.poster-slide img{width:100%;height:auto;display:block;object-fit:contain;}
+.poster-dots{display:flex;justify-content:center;gap:8px;margin-top:12px;}
+.poster-dot{width:8px;height:8px;border-radius:50%;background:#d1d5db;border:0;cursor:pointer;transition:var(--transition);padding:0;}
+.poster-dot.active{width:24px;border-radius:4px;background:var(--primary);}
+
+/* ===== HERO ===== */
+.hero{padding:28px 24px 18px;}
+.hero-content{background:linear-gradient(135deg,#1a56db,#2563eb);border-radius:24px;padding:30px;color:#fff;position:relative;overflow:hidden;}
+.hero-content::after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-90px;top:-100px;background:rgba(255,255,255,.1);}
+.hero h1{font-size:30px;line-height:1.2;font-weight:800;max-width:650px;position:relative;z-index:1;}
+.hero p{margin-top:10px;font-size:14px;opacity:.9;max-width:600px;line-height:1.7;position:relative;z-index:1;}
+
+/* ===== SEARCH ===== */
+.search-section{padding:8px 24px 0;}
+.search-box{background:#fff;border:1px solid var(--border);height:54px;border-radius:15px;display:flex;align-items:center;padding:0 16px;gap:12px;box-shadow:var(--shadow-sm);transition:var(--transition);}
+.search-box:focus-within{border-color:var(--primary);box-shadow:0 0 0 4px rgba(26,86,219,.12);}
+.search-icon{color:var(--muted);width:20px;height:20px;flex-shrink:0;}
+.search-box input{border:0;outline:0;flex:1;background:transparent;color:var(--text);font-size:14px;min-width:0;}
+.search-box input::placeholder{color:#a3a8ad;}
+
+/* ===== CATEGORY ===== */
+.category-wrapper{padding:18px 24px 8px;}
+.category-list{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;}
+.category-list::-webkit-scrollbar{display:none;}
+.category{flex-shrink:0;border:1px solid var(--border);background:#fff;color:var(--muted);padding:10px 17px;border-radius:30px;font-size:13px;font-weight:600;transition:var(--transition);}
+.category:hover{border-color:var(--primary);color:var(--primary);}
+.category.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+/* ===== SECTION HEADER ===== */
+.section-header{padding:22px 24px 4px;display:flex;align-items:center;justify-content:space-between;}
+.section-title{font-size:20px;font-weight:800;}
+.result-count{color:var(--muted);font-size:12px;}
+
+/* ===== MENU GRID ===== */
+.menu-grid{padding:18px 24px 100px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.menu-card{background:#fff;border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:var(--transition);position:relative;display:flex;flex-direction:column;}
+.menu-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
+.product-image{width:100%;height:210px;object-fit:cover;display:block;background:#f0f1f3;}
+.product-image-wrapper{position:relative;cursor:pointer;}
+.discount{position:absolute;top:12px;left:12px;background:#1a56db;color:#fff;padding:6px 9px;border-radius:8px;font-size:11px;font-weight:700;z-index:2;}
+.status{position:absolute;right:12px;top:12px;padding:6px 9px;border-radius:8px;font-size:10px;font-weight:700;z-index:2;}
+.status.available{background:#fff;color:var(--primary);}
+.status.unavailable{background:#1a56db;color:#fff;}
+.product-content{padding:16px;display:flex;flex-direction:column;flex:1;}
+.product-category{font-size:10px;color:var(--primary);font-weight:700;text-transform:uppercase;margin-bottom:6px;}
+.product-name{font-size:16px;font-weight:700;line-height:1.4;}
+.product-description{color:var(--muted);font-size:12px;line-height:1.6;margin-top:6px;min-height:38px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.product-bottom{margin-top:auto;padding-top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.price-box{display:flex;flex-direction:column;min-width:0;}
+.current-price{color:var(--primary);font-size:17px;font-weight:800;white-space:nowrap;}
+.old-price{color:#a5a9ad;font-size:11px;text-decoration:line-through;}
+.add-btn{border:0;width:40px;height:40px;border-radius:12px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;transition:var(--transition);flex-shrink:0;}
+.add-btn:hover:not(:disabled){background:var(--primary-dark);transform:scale(1.06);}
+.add-btn:disabled{background:#d7d9dc;cursor:not-allowed;}
+.admin-actions{display:flex;gap:7px;padding:0 16px 16px;}
+.admin-edit,.admin-delete{flex:1;border:0;border-radius:9px;padding:8px;font-size:11px;font-weight:700;background:var(--primary);color:#fff;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:6px;}
+.admin-delete{background:var(--danger);}
+.admin-edit:hover{background:var(--primary-dark);}
+.admin-delete:hover{background:#b91c1c;}
+
+.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;}
+.empty-icon{width:62px;height:62px;margin:auto;border-radius:18px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:#9da3a8;}
+.empty-state h3{margin-top:16px;font-size:16px;}
+.empty-state p{margin-top:6px;color:var(--muted);font-size:12px;}
+.loading-state{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--muted);font-size:13px;}
+.spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--primary);margin:0 auto 14px;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ===== ADMIN PANEL ===== */
+.admin-panel{position:fixed;right:24px;bottom:24px;z-index:300;display:none;gap:10px;flex-direction:column;}
+.admin-panel.visible{display:flex;}
+.fab{width:52px;height:52px;border:0;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-lg);transition:var(--transition);}
+.fab:hover{transform:scale(1.08);background:var(--primary-dark);}
+.fab.logout{background:var(--danger);}
+.fab.logout:hover{background:#b91c1c;}
+
+/* ===== AUTO SCROLL BUTTON ===== */
+.auto-scroll-btn{
+    position:fixed;
+    left:24px;
+    bottom:24px;
+    z-index:400;
+    width:52px;
+    height:52px;
+    border:0;
+    border-radius:50%;
+    background:#fff;
+    color:var(--primary);
+    border:1px solid var(--border);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    box-shadow:var(--shadow-lg);
+    transition:var(--transition);
+    cursor:pointer;
+}
+.auto-scroll-btn.visible{display:flex;}
+.auto-scroll-btn:hover{background:var(--primary);color:#fff;transform:scale(1.08);}
+.auto-scroll-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.auto-scroll-btn svg{width:22px;height:22px;}
+
+/* ===== CART DRAWER ===== */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:500;display:none;}
+.drawer-overlay.active{display:block;}
+.cart-drawer{position:fixed;right:0;top:0;width:420px;max-width:100%;height:100%;background:#fff;z-index:501;transform:translateX(100%);transition:.3s ease;display:flex;flex-direction:column;box-shadow:-10px 0 35px rgba(0,0,0,.15);}
+.cart-drawer.active{transform:translateX(0);}
+.drawer-header{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.drawer-title{font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px;}
+.close-btn{width:38px;height:38px;border:1px solid var(--border);background:#1a56db;color:#fff;border-radius:10px;transition:var(--transition);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;}
+.close-btn:hover{background:var(--primary-dark);}
+.cart-items{flex:1;overflow-y:auto;padding:16px;}
+.cart-item{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);}
+.cart-item-image{width:64px;height:64px;object-fit:cover;border-radius:10px;flex-shrink:0;background:#f0f1f3;}
+.cart-item-info{flex:1;min-width:0;}
+.cart-item-name{font-size:13px;font-weight:700;}
+.cart-item-price{color:var(--primary);font-size:12px;margin-top:4px;font-weight:700;}
+.quantity{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.quantity button{width:26px;height:26px;border:1px solid var(--border);background:#1a56db;color:#fff;border-radius:7px;transition:var(--transition);font-weight:700;display:flex;align-items:center;justify-content:center;}
+.quantity button:hover{background:var(--primary-dark);}
+.quantity span{min-width:20px;text-align:center;font-size:12px;font-weight:700;}
+.remove-item{border:0;background:none;color:var(--danger);font-size:11px;margin-top:7px;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;}
+.remove-item:hover{text-decoration:underline;}
+.cart-footer{border-top:1px solid var(--border);padding:18px;}
+.total-row{display:flex;justify-content:space-between;margin-bottom:15px;align-items:center;}
+.total-label{font-size:14px;font-weight:600;}
+.total-value{color:var(--primary);font-size:20px;font-weight:800;}
+.checkout-btn{width:100%;border:0;background:var(--primary);color:#fff;padding:14px;border-radius:12px;font-weight:700;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;}
+.checkout-btn:hover:not(:disabled){background:var(--primary-dark);}
+.checkout-btn:disabled{background:#d7d9dc;cursor:not-allowed;}
+
+/* ===== MODAL ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:700;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.active{display:flex;}
+.modal{width:100%;max-width:470px;max-height:92vh;overflow-y:auto;background:#fff;border-radius:22px;box-shadow:var(--shadow-lg);animation:modalIn .25s ease;}
+@keyframes modalIn{from{opacity:0;transform:translateY(15px) scale(.98);}to{opacity:1;transform:none;}}
+.modal-header{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;border-radius:22px 22px 0 0;z-index:1;}
+.modal-title{font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px;}
+.modal-body{padding:20px;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;margin-bottom:7px;font-size:12px;font-weight:700;}
+.form-control{width:100%;border:1px solid var(--border);background:#fafafa;border-radius:11px;padding:12px 13px;outline:none;font-size:13px;transition:var(--transition);font-family:inherit;}
+.form-control:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(26,86,219,.12);}
+textarea.form-control{min-height:90px;resize:vertical;}
+.modal-footer{padding:16px 20px 20px;display:flex;gap:9px;}
+.btn{flex:1;border:0;padding:13px;border-radius:11px;font-size:13px;font-weight:700;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--primary-dark);}
+.btn-primary:disabled{background:#d7d9dc;cursor:not-allowed;}
+.btn-secondary{background:#1a56db;color:#fff;}
+.btn-secondary:hover{background:var(--primary-dark);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-danger:hover{background:#b91c1c;}
+
+/* ===== PRODUCT DETAIL ===== */
+.detail-image{width:100%;height:260px;object-fit:cover;border-radius:22px 22px 0 0;}
+.detail-body{padding:20px;}
+.detail-category{font-size:11px;color:var(--primary);font-weight:700;}
+.detail-title{font-size:23px;font-weight:800;margin-top:6px;}
+.detail-description{color:var(--muted);font-size:13px;line-height:1.8;margin-top:10px;}
+.detail-price{margin-top:16px;color:var(--primary);font-size:22px;font-weight:800;}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;top:20px;right:20px;z-index:1000;background:#1a56db;color:#fff;padding:13px 18px;border-radius:11px;font-size:12px;font-weight:600;box-shadow:var(--shadow-lg);transform:translateY(-20px);opacity:0;pointer-events:none;transition:.25s ease;max-width:320px;display:flex;align-items:center;gap:10px;}
+.toast.show{transform:none;opacity:1;}
+.toast.success{background:var(--primary);}
+.toast.error{background:var(--danger);}
+
+/* ===== PIN SCREEN ===== */
+.pin-modal{width:100%;max-width:420px;background:#fff;border-radius:24px;padding:32px 24px;box-shadow:var(--shadow-lg);animation:modalIn .25s ease;}
+.pin-title{text-align:center;font-size:16px;font-weight:700;color:var(--text);margin-bottom:24px;line-height:1.5;}
+.pin-dots{display:flex;justify-content:center;gap:18px;margin-bottom:36px;}
+.pin-dot{width:22px;height:22px;border-radius:50%;border:2px solid #cbd0d5;background:#fff;transition:all .2s ease;}
+.pin-dot.filled{background:var(--primary);border-color:var(--primary);transform:scale(1.1);}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:340px;margin:0 auto;}
+.pin-key{aspect-ratio:1;border:0;border-radius:50%;background:#f0f2f5;color:var(--text);font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:var(--transition);font-family:inherit;cursor:pointer;user-select:none;}
+.pin-key:hover:not(:disabled){background:#e3e6ea;transform:scale(1.05);}
+.pin-key:active:not(:disabled){background:var(--primary);color:#fff;transform:scale(0.95);}
+.pin-key.action{background:transparent;color:var(--text);}
+.pin-key.action:hover{background:#f0f2f5;}
+.pin-key.action svg{width:22px;height:22px;}
+.pin-error{text-align:center;color:var(--danger);font-size:13px;font-weight:600;margin-top:16px;min-height:20px;}
+.pin-shake{animation:pinShake .4s ease;}
+@keyframes pinShake{0%,100%{transform:translateX(0);}20%{transform:translateX(-10px);}40%{transform:translateX(10px);}60%{transform:translateX(-8px);}80%{transform:translateX(8px);}}
+
+/* ===== CONFIRM ===== */
+.confirm-body{padding:24px 20px;text-align:center;}
+.confirm-body p{font-size:14px;line-height:1.7;color:var(--text);}
+.confirm-body .warn-icon{width:60px;height:60px;margin:0 auto 16px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;color:var(--danger);}
+
+/* ===== ORDER TYPE ===== */
+.order-type-list{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
+.order-type-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:#fafafa;transition:var(--transition);gap:12px;}
+.order-type-item.enabled{background:#eff6ff;border-color:var(--primary);}
+.order-type-info{display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
+.order-type-icon{width:38px;height:38px;border-radius:10px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;}
+.order-type-item.enabled .order-type-icon{background:var(--primary);color:#fff;border-color:var(--primary);}
+.order-type-name{font-size:13px;font-weight:700;}
+.order-type-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ===== AUTO SCROLL SETTINGS ===== */
+.auto-scroll-settings{
+    padding:14px 16px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fafafa;
+    margin-bottom:14px;
+    transition:var(--transition);
+}
+.auto-scroll-settings.enabled{
+    background:#eff6ff;
+    border-color:var(--primary);
+}
+.auto-scroll-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+}
+.auto-scroll-info{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex:1;
+    min-width:0;
+}
+.auto-scroll-icon{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    background:#fff;
+    border:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--primary);
+    flex-shrink:0;
+}
+.auto-scroll-settings.enabled .auto-scroll-icon{
+    background:var(--primary);
+    color:#fff;
+    border-color:var(--primary);
+}
+.auto-scroll-name{font-size:13px;font-weight:700;}
+.auto-scroll-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.speed-slider-wrapper{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px dashed var(--border);
+}
+.speed-label{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:11px;
+    font-weight:700;
+    color:var(--muted);
+    margin-bottom:8px;
+}
+.speed-value{
+    color:var(--primary);
+    font-size:12px;
+    font-weight:800;
+}
+.speed-slider{
+    width:100%;
+    height:6px;
+    border-radius:6px;
+    -webkit-appearance:none;
+    appearance:none;
+    background:#e3e6ea;
+    outline:none;
+}
+.speed-slider::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:var(--primary);
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(26,86,219,.4);
+    border:3px solid #fff;
+}
+.speed-slider::-moz-range-thumb{
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:var(--primary);
+    cursor:pointer;
+    border:3px solid #fff;
+    box-shadow:0 2px 8px rgba(26,86,219,.4);
+}
+.speed-range-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    color:var(--muted);
+    margin-top:6px;
+}
+
+/* ===== SWITCH ===== */
+.switch{position:relative;width:46px;height:26px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:#cbd0d5;border-radius:26px;transition:.3s;}
+.slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.switch input:checked + .slider{background:var(--primary);}
+.switch input:checked + .slider:before{transform:translateX(20px);}
+.switch input:disabled + .slider{opacity:.4;cursor:not-allowed;}
+
+/* ===== PASSWORD ===== */
+.password-wrapper{position:relative;}
+.password-wrapper input{padding-right:44px;}
+.toggle-password{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:8px;transition:var(--transition);}
+.toggle-password:hover{background:#f0f1f3;color:var(--primary);}
+
+/* ===== POSTER MANAGER ===== */
+.poster-row{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:#fafafa;}
+.poster-row-thumb{width:72px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#e5e7eb;}
+.poster-row-info{flex:1;min-width:0;}
+.poster-row-title{font-size:12px;font-weight:700;color:var(--muted);}
+.poster-row-actions{display:flex;gap:5px;flex-shrink:0;}
+.poster-row-actions button{border:0;padding:6px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.poster-row-edit{background:var(--primary);}
+.poster-row-delete{background:var(--danger);}
+
+.master-toggle{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#eff6ff;border:1px solid var(--primary);border-radius:12px;margin-bottom:14px;gap:12px;}
+.master-toggle-title{font-size:13px;font-weight:700;color:var(--text);}
+.master-toggle-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){.menu-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){
+    body{background:var(--bg);}
+    .hero{padding:18px 16px 10px;}
+    .hero-content{padding:24px 20px;border-radius:20px;}
+    .hero h1{font-size:24px;}
+    .poster-section{padding:12px 16px 6px;}
+    .poster-slider{border-radius:14px;}
+    .search-section{padding:8px 16px 0;}
+    .category-wrapper{padding:16px;}
+    .section-header{padding:18px 16px 2px;}
+    .menu-grid{padding:14px 16px 100px;gap:12px;}
+    .product-image{height:150px;}
+    .product-content{padding:12px;}
+    .product-name{font-size:14px;}
+    .product-description{font-size:11px;min-height:32px;}
+    .current-price{font-size:14px;}
+    .add-btn{width:36px;height:36px;}
+    .header-inner{padding:14px 16px;}
+    .brand-name{font-size:15px;}
+    .brand-subtitle{font-size:9px;}
+    .brand-logo{width:40px;height:40px;}
+    .admin-panel{right:16px;bottom:16px;}
+    .auto-scroll-btn{left:16px;bottom:16px;width:46px;height:46px;}
+    .cart-drawer{width:100%;}
+    .toast{right:16px;left:16px;top:16px;max-width:none;}
+    .pin-modal{padding:24px 16px;border-radius:20px;}
+    .pin-dots{gap:14px;margin-bottom:28px;}
+    .pin-dot{width:18px;height:18px;}
+    .pin-keypad{gap:10px;}
+    .pin-key{font-size:20px;}
+    .pin-title{font-size:14px;}
+}
+@media(max-width:380px){
+    .menu-grid{grid-template-columns:1fr 1fr;gap:9px;}
+    .product-image{height:125px;}
+    .product-content{padding:10px;}
+    .product-name{font-size:13px;}
+    .current-price{font-size:13px;}
+    .add-btn{width:32px;height:32px;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+    <div class="header-inner">
+        <div class="brand">
+            <div class="brand-logo">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l1-5h16l1 5"/>
+                    <path d="M3 9a2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0 2 2 2 2 0 0 0 2-2"/>
+                    <path d="M5 11v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8"/>
+                    <rect x="9" y="14" width="6" height="6" rx="0.5"/>
+                </svg>
+            </div>
+            <div>
+                <div class="brand-name">Digital Shop Pro</div>
+                <div class="brand-subtitle">Digital Product Shop</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn cart-btn" onclick="openCart()" aria-label="Cart">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="20" r="1"/>
+                    <circle cx="19" cy="20" r="1"/>
+                    <path d="M3 4h2l2.5 11h10L21 7H6"/>
+                </svg>
+                <span class="cart-count" id="cartCount">0</span>
+            </button>
+            <button class="icon-btn" onclick="toggleLogin()" aria-label="Admin">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="4"/>
+                    <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- ===== POSTER SECTION ===== -->
+<section class="poster-section" id="posterSection">
+    <div class="poster-slider" id="posterSlider"></div>
+    <div class="poster-dots" id="posterDots"></div>
+</section>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>ស្វែងរកទំនិញដែលអ្នកចូលចិត្ត</h1>
+        <p>រុករកទំនិញ និងផលិតផល ហើយបញ្ជាទិញបានយ៉ាងងាយស្រួល។</p>
+    </div>
+</section>
+
+<!-- ===== SEARCH ===== -->
+<section class="search-section">
+    <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-4-4"/>
+        </svg>
+        <input id="searchInput" type="text" placeholder="ស្វែងរកទំនិញ..." oninput="handleSearch(this.value)">
+    </div>
+</section>
+
+<!-- ===== CATEGORY ===== -->
+<section class="category-wrapper">
+    <div class="category-list" id="categoryList">
+        <button class="category active" data-cat="all" onclick="filterCategory('all',this)">ទាំងអស់</button>
+    </div>
+</section>
+
+<!-- ===== SECTION HEADER ===== -->
+<div class="section-header">
+    <h2 class="section-title">ទំនិញ</h2>
+    <span class="result-count" id="resultCount">0 items</span>
+</div>
+
+<!-- ===== PRODUCT GRID ===== -->
+<main class="menu-grid" id="menuGrid">
+    <div class="loading-state">
+        <div class="spinner"></div>
+        កំពុងផ្ទុកទិន្នន័យ...
+    </div>
+</main>
+
+</div>
+
+<!-- ===== ADMIN FAB ===== -->
+<div class="admin-panel" id="adminPanel">
+    <button class="fab" onclick="openAddProduct()" title="បន្ថែមទំនិញ">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14"/>
+            <path d="M5 12h14"/>
+        </svg>
+    </button>
+    <button class="fab" onclick="openCategoryManager()" title="គ្រប់គ្រងប្រភេទទំនិញ">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+    </button>
+    <button class="fab" onclick="openOrderTypeSettings()" title="កំណត់ប្រភេទការទទួល និង Auto Scroll">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+    </button>
+    <button class="fab" onclick="openPosterManager()" title="គ្រប់គ្រង Poster">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="14" rx="2"/>
+            <path d="M8 21h8"/>
+            <path d="M12 17v4"/>
+        </svg>
+    </button>
+    <button class="fab" onclick="openTelegramSettings()" title="ការកំណត់ Telegram">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2 11 13"/>
+            <path d="M22 2 15 22 11 13 2 9l20-7z"/>
+        </svg>
+    </button>
+    <button class="fab logout" onclick="logout()" title="ចេញពីប្រព័ន្ធ">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 17l5-5-5-5"/>
+            <path d="M15 12H3"/>
+            <path d="M21 3v18"/>
+        </svg>
+    </button>
+</div>
+
+<!-- ===== AUTO SCROLL BUTTON (Admin Only) ===== -->
+<button class="auto-scroll-btn" id="autoScrollBtn" onclick="togglePageAutoScroll()" title="បិទ/បើក Auto Scroll">
+    <svg id="autoScrollIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+    </svg>
+</button>
+
+<!-- ===== CART DRAWER ===== -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeCart()"></div>
+
+<aside class="cart-drawer" id="cartDrawer">
+    <div class="drawer-header">
+        <div class="drawer-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+                <circle cx="9" cy="20" r="1"/>
+                <circle cx="19" cy="20" r="1"/>
+                <path d="M3 4h2l2.5 11h10L21 7H6"/>
+            </svg>
+            កន្ត្រករបស់អ្នក
+        </div>
+        <button class="close-btn" onclick="closeCart()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6 6 18"/>
+                <path d="m6 6 12 12"/>
+            </svg>
+        </button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+        <div class="total-row">
+            <span class="total-label">សរុប</span>
+            <span class="total-value" id="cartTotal">0 រៀល</span>
+        </div>
+        <button class="checkout-btn" id="checkoutBtn" onclick="openCheckout()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14"/>
+                <path d="m12 5 7 7-7 7"/>
+            </svg>
+            បន្តការបញ្ជាទិញ
+        </button>
+    </div>
+</aside>
+
+<!-- ===== PRODUCT DETAIL MODAL ===== -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal">
+        <img id="detailImage" class="detail-image" src="" alt="Product">
+        <div class="detail-body">
+            <div class="detail-category" id="detailCategory"></div>
+            <h2 class="detail-title" id="detailTitle"></h2>
+            <p class="detail-description" id="detailDescription"></p>
+            <div class="detail-price" id="detailPrice"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('detailModal')">បិទ</button>
+            <button class="btn btn-primary" id="detailAddBtn">បន្ថែមទៅកន្ត្រក</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== LOGIN MODAL ===== -->
+<div class="modal-overlay" id="loginModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                ចូលប្រព័ន្ធ Admin
+            </div>
+            <button class="close-btn" onclick="closeModal('loginModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">ឈ្មោះអ្នកប្រើប្រាស់</label>
+                <input id="username" class="form-control" type="text" placeholder="បញ្ចូលឈ្មោះអ្នកប្រើប្រាស់" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ពាក្យសម្ងាត់</label>
+                <div class="password-wrapper">
+                    <input id="password" class="form-control" type="password" placeholder="បញ្ចូលពាក្យសម្ងាត់" autocomplete="current-password">
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" aria-label="បង្ហាញ/លាក់ពាក្យសម្ងាត់">
+                        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('loginModal')">បោះបង់</button>
+            <button class="btn btn-primary" onclick="login()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                    <polyline points="10 17 15 12 10 7"/>
+                    <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                ចូលប្រព័ន្ធ
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== PIN MODAL ===== -->
+<div class="modal-overlay" id="pinModal">
+    <div class="pin-modal" id="pinModalBox">
+        <div class="pin-title">សូមបញ្ចូលលេខកូដ 4 ខ្ទង់</div>
+        
+        <div class="pin-dots" id="pinDots">
+            <div class="pin-dot"></div>
+            <div class="pin-dot"></div>
+            <div class="pin-dot"></div>
+            <div class="pin-dot"></div>
+        </div>
+        
+        <div class="pin-keypad" id="pinKeypad">
+            <button type="button" class="pin-key" data-num="1">1</button>
+            <button type="button" class="pin-key" data-num="2">2</button>
+            <button type="button" class="pin-key" data-num="3">3</button>
+            <button type="button" class="pin-key" data-num="4">4</button>
+            <button type="button" class="pin-key" data-num="5">5</button>
+            <button type="button" class="pin-key" data-num="6">6</button>
+            <button type="button" class="pin-key" data-num="7">7</button>
+            <button type="button" class="pin-key" data-num="8">8</button>
+            <button type="button" class="pin-key" data-num="9">9</button>
+            
+            <button type="button" class="pin-key action" data-action="cancel" title="ចាកចេញ">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+            
+            <button type="button" class="pin-key" data-num="0">0</button>
+            
+            <button type="button" class="pin-key action" data-action="delete" title="លុប">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+                    <line x1="18" y1="9" x2="12" y2="15"/>
+                    <line x1="12" y1="9" x2="18" y2="15"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="pin-error" id="pinError"></div>
+    </div>
+</div>
+
+<!-- ===== PRODUCT FORM MODAL ===== -->
+<div class="modal-overlay" id="productModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title" id="productModalTitle">បន្ថែមទំនិញ</div>
+            <button class="close-btn" onclick="closeModal('productModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">ឈ្មោះទំនិញ</label>
+                <input id="productName" class="form-control" placeholder="ឈ្មោះទំនិញ">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ព័ត៌មានលម្អិត</label>
+                <textarea id="productInfo" class="form-control" placeholder="ព័ត៌មានអំពីទំនិញ"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">តម្លៃ</label>
+                <input id="productPrice" class="form-control" type="number" placeholder="តម្លៃជារៀល">
+            </div>
+            <div class="form-group">
+                <label class="form-label">តម្លៃចាស់</label>
+                <input id="productOldPrice" class="form-control" type="number" placeholder="ទុកទទេប្រសិនបើគ្មាន">
+            </div>
+            <div class="form-group">
+                <label class="form-label">ប្រភេទ</label>
+                <select id="productCategory" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ស្ថានភាព</label>
+                <select id="productStatus" class="form-control">
+                    <option value="available">មានលក់</option>
+                    <option value="unavailable">អស់</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">រូបភាព</label>
+                <input id="productImage" class="form-control" type="file" accept="image/*">
+                <div style="margin-top:8px;font-size:11px;color:var(--muted)">រូបភាពត្រូវតូចជាង 3MB (នឹងត្រូវបានបង្រួមស្វ័យប្រវត្តិ)</div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('productModal')">បោះបង់</button>
+            <button class="btn btn-primary" onclick="saveProduct(event)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                រក្សាទុក
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CHECKOUT MODAL ===== -->
+<div class="modal-overlay" id="checkoutModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">បញ្ជាទិញ</div>
+            <button class="close-btn" onclick="closeModal('checkoutModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">ឈ្មោះអតិថិជន</label>
+                <input id="customerName" class="form-control" placeholder="ឈ្មោះ">
+            </div>
+            <div class="form-group">
+                <label class="form-label">លេខទូរស័ព្ទ</label>
+                <input id="customerPhone" class="form-control" type="tel" placeholder="លេខទូរស័ព្ទ">
+            </div>
+            <div class="form-group" id="orderTypeGroup">
+                <label class="form-label">ប្រភេទការទទួល</label>
+                <select id="orderType" class="form-control" onchange="toggleAddress()"></select>
+            </div>
+            <div class="form-group" id="tableGroup" style="display:none">
+                <label class="form-label">លេខតុ</label>
+                <input id="tableNumber" class="form-control" placeholder="លេខតុ">
+            </div>
+            <div class="form-group" id="addressGroup" style="display:none">
+                <label class="form-label">អាសយដ្ឋាន</label>
+                <textarea id="customerAddress" class="form-control" placeholder="អាសយដ្ឋានសម្រាប់ដឹកជញ្ជូន"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ចំណាំ</label>
+                <textarea id="orderNote" class="form-control" placeholder="ចំណាំបន្ថែម"></textarea>
+            </div>
+            <div class="total-row">
+                <span class="total-label">សរុបការបញ្ជាទិញ</span>
+                <span class="total-value" id="checkoutTotal">0 រៀល</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('checkoutModal')">បោះបង់</button>
+            <button class="btn btn-primary" onclick="submitOrder()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                បញ្ជាក់ការបញ្ជាទិញ
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ORDER TYPE + AUTO SCROLL MODAL ===== -->
+<div class="modal-overlay" id="orderTypeModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                ការកំណត់ប្រព័ន្ធ
+            </div>
+            <button class="close-btn" onclick="closeModal('orderTypeModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Auto Scroll Settings -->
+            <div class="auto-scroll-settings" id="autoScrollSettings">
+                <div class="auto-scroll-header">
+                    <div class="auto-scroll-info">
+                        <div class="auto-scroll-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                <path d="M12 5v14"/>
+                                <path d="m19 12-7 7-7-7"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="auto-scroll-name">Auto Scroll ទំព័រ</div>
+                            <div class="auto-scroll-desc">រត់ចុះ-ឡើងស្វ័យប្រវត្តិ</div>
+                        </div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="pageAutoScrollToggle" onchange="togglePageAutoScrollSetting(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="speed-slider-wrapper" id="speedWrapper" style="display:none">
+                    <div class="speed-label">
+                        <span>ល្បឿនរត់</span>
+                        <span class="speed-value" id="speedValue">0.7</span>
+                    </div>
+                    <input type="range" class="speed-slider" id="speedSlider" min="0.2" max="3" step="0.1" value="0.7" oninput="updateSpeedValue(this.value)" onchange="saveSpeedSetting(this.value)">
+                    <div class="speed-range-labels">
+                        <span>យឺត</span>
+                        <span>លឿន</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;padding:10px;background:#f0f1f3;border-radius:9px">
+                <strong style="color:var(--text)">ប្រភេទការទទួល៖</strong> បើក/បិទប្រភេទដែលអ្នកចង់បង្ហាញឱ្យអតិថិជនជ្រើសរើស។
+            </div>
+            <div class="order-type-list" id="orderTypeList"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeModal('orderTypeModal')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                រួចរាល់
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TELEGRAM MODAL ===== -->
+<div class="modal-overlay" id="telegramModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+                    <path d="M22 2 11 13"/>
+                    <path d="M22 2 15 22 11 13 2 9l20-7z"/>
+                </svg>
+                ការកំណត់ Telegram
+            </div>
+            <button class="close-btn" onclick="closeModal('telegramModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Telegram Username អ្នកលក់</label>
+                <div style="display:flex;align-items:center;border:1px solid var(--border);background:#fafafa;border-radius:11px;overflow:hidden;">
+                    <span style="padding:0 10px;color:var(--muted);font-size:14px;font-weight:600">@</span>
+                    <input id="telegramUsername" style="border:0;outline:0;flex:1;background:transparent;padding:12px 13px 12px 0;font-size:13px;font-family:inherit" placeholder="username" oninput="document.getElementById('tgPreview').textContent='@'+this.value.trim()">
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f0f1f3;border-radius:10px;font-size:13px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2">
+                    <path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9l20-7z"/>
+                </svg>
+                <span>នឹងផ្ញើទៅ: <strong id="tgPreview" style="color:#1a56db">@username</strong></span>
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.6;padding:10px;background:#f0f1f3;border-radius:9px">
+                ការកំណត់នេះរក្សាទុកលើ Cloud (Firestore) ដូច្នេះគ្រប់ឧបករណ៍នឹងប្រើ username ដូចគ្នា។
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('telegramModal')">បោះបង់</button>
+            <button class="btn btn-primary" onclick="saveTelegramSettings(event)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                រក្សាទុក
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CATEGORY MANAGER MODAL ===== -->
+<div class="modal-overlay" id="categoryModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">គ្រប់គ្រងប្រភេទ</div>
+            <button class="close-btn" onclick="closeModal('categoryModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">ប្រភេទថ្មី</label>
+                <div style="display:flex;gap:8px">
+                    <input id="newCategoryName" class="form-control" placeholder="ឈ្មោះប្រភេទថ្មី">
+                    <button class="btn btn-primary" style="flex:none;width:90px" onclick="addCategory()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M12 5v14"/>
+                            <path d="M5 12h14"/>
+                        </svg>
+                        បន្ថែម
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ប្រភេទបច្ចុប្បន្ន</label>
+                <div id="categoryManagerList"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('categoryModal')">បិទ</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== POSTER MANAGER MODAL ===== -->
+<div class="modal-overlay" id="posterManagerModal">
+    <div class="modal" style="max-width:480px">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="14" rx="2"/>
+                    <path d="M8 21h8"/>
+                    <path d="M12 17v4"/>
+                </svg>
+                គ្រប់គ្រងរូបភាព Poster
+            </div>
+            <button class="close-btn" onclick="closeModal('posterManagerModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="master-toggle">
+                <div>
+                    <div class="master-toggle-title">បង្ហាញ Poster នៅទំព័រដើម</div>
+                    <div class="master-toggle-desc">បិទ ដើម្បីលាក់រូបភាពទាំងអស់</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="posterVisibleToggle" onchange="togglePosterVisible(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="order-type-item" style="margin-bottom:14px">
+                <div class="order-type-info">
+                    <div class="order-type-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="order-type-name">រត់ស្វ័យប្រវត្តិ</div>
+                        <div class="order-type-desc">បើក ដើម្បីរត់រៀងរាល់ 4 វិនាទី</div>
+                    </div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="autoSlideToggle" onchange="toggleAutoSlide(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button class="btn btn-primary" style="width:100%;margin-bottom:14px" onclick="openPosterForm()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 5v14"/>
+                    <path d="M5 12h14"/>
+                </svg>
+                បន្ថែមរូបភាពថ្មី
+            </button>
+
+            <div class="form-group">
+                <label class="form-label">បញ្ជីរូបភាព</label>
+                <div id="posterManagerList"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('posterManagerModal')">បិទ</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== POSTER FORM MODAL ===== -->
+<div class="modal-overlay" id="posterFormModal">
+    <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+            <div class="modal-title" id="posterFormTitle">បន្ថែមរូបភាព</div>
+            <button class="close-btn" onclick="closeModal('posterFormModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">រូបភាព Poster</label>
+                <input id="posterImage" class="form-control" type="file" accept="image/*">
+                <div style="margin-top:8px;font-size:11px;color:var(--muted)">
+                    ណែនាំ៖ រូបភាពផ្តេក តូចជាង 3MB
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('posterFormModal')">បោះបង់</button>
+            <button class="btn btn-primary" onclick="savePoster(event)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                រក្សាទុក
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CONFIRM MODAL ===== -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal" style="max-width:400px">
+        <div class="modal-body">
+            <div class="confirm-body">
+                <div class="warn-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 9v4"/>
+                        <path d="M12 17h.01"/>
+                        <circle cx="12" cy="12" r="9"/>
+                    </svg>
+                </div>
+                <p id="confirmMessage">តើអ្នកប្រាកដទេ?</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeConfirm(false)">បោះបង់</button>
+            <button class="btn btn-danger" onclick="closeConfirm(true)">យល់ព្រម</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// FIREBASE CONFIG
+// ============================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyBzaxNsStAUTBf56cz47Ux50bhO3E5yZTk",
+    authDomain: "possystem-42360.firebaseapp.com",
+    projectId: "possystem-42360",
+    storageBucket: "possystem-42360.firebasestorage.app",
+    messagingSenderId: "809983721873",
+    appId: "1:809983721873:web:6b5532c71af796b9e75a30"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ============================================================
+// STORAGE KEYS
+// ============================================================
+const STORAGE_KEYS = {
+    cart: 'dm_cart',
+    admin: 'dm_admin'
+};
+
+// ============================================================
+// CONFIG
+// ============================================================
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "admin123";
+const ADMIN_PIN = "2026";
+const PIN_LENGTH = 4;
+const MAX_PIN_ATTEMPTS = 3;
+
+// ============================================================
+// DEFAULT DATA
+// ============================================================
+const DEFAULT_CATEGORIES = [];
+
+const DEFAULT_ORDER_TYPES = [
+    { id: 'table',    label: 'នៅតុ',        desc: 'អតិថិជនអង្គុយនៅតុក្នុងហាង',     icon: 'table', enabled: true },
+    { id: 'pickup',   label: 'មកយកផ្ទាល់', desc: 'អតិថិជនមកយកទំនិញនៅហាង',      icon: 'bag',   enabled: true },
+    { id: 'delivery', label: 'ដឹកជញ្ជូន',   desc: 'ដឹកជញ្ជូនទៅអាសយដ្ឋានអតិថិជន', icon: 'truck', enabled: true }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let products = [];
+let categories = [];
+let cart = [];
+let isAdmin = false;
+let currentCategory = "all";
+let currentSearch = "";
+let editingId = null;
+let detailProductId = null;
+let telegramUsername = "";
+let orderTypes = [...DEFAULT_ORDER_TYPES];
+let confirmResolver = null;
+let searchTimeout = null;
+
+// PIN state
+let currentPin = "";
+let pinAttempts = 0;
+
+// Poster state
+let posters = [];
+let currentSlide = 0;
+let slideInterval = null;
+let autoSlide = true;
+let posterVisible = false;
+let editingPosterId = null;
+
+// Auto Scroll state
+let pageAutoScrollEnabled = false;
+let pageScrollDirection = 1;
+let pageScrollInterval = null;
+let pageScrollPauseTimeout = null;
+let pageScrollIdleTimeout = null;
+let pageScrollSpeed = 0.7;
+let isUserInteracting = false;
+let interactionEndTimeout = null;
+let lastScrollHeight = 0;
+let heightCheckInterval = null;
+const PAGE_SCROLL_EDGE_DELAY = 2000;
+const PAGE_SCROLL_IDLE_DELAY = 5000;
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener("DOMContentLoaded", async () => {
+    loadCart();
+    loadAdmin();
+    updateAdminUI();
+    setupPinKeypad();
+    setupAutoScrollEvents();
+    setupPosterSwipe();
+    detectPageHeightChange();
+    await initializeData();
+});
+
+async function initializeData() {
+    try {
+        await Promise.all([
+            fetchCategories(),
+            fetchProducts(),
+            loadTelegramSettings(),
+            loadOrderTypes(),
+            loadPosters(),
+            loadAutoScrollSettings()
+        ]);
+        
+        renderCategoryFilters();
+        populateCategorySelect();
+        renderProducts();
+        renderPosters();
+        updateCart();
+        applyAutoScrollState();
+    } catch (error) {
+        console.error('Init error:', error);
+        showToast("មានបញ្ហាក្នុងការផ្ទុកទិន្នន័យ", "error");
+    }
+}
+
+// ============================================================
+// CATEGORIES
+// ============================================================
+async function fetchCategories() {
+    try {
+        const snapshot = await db.collection('categories').get();
+        categories = [];
+        snapshot.forEach(doc => {
+            categories.push({ id: doc.id, ...doc.data() });
+        });
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        categories = [];
+    }
+}
+
+// ============================================================
+// PRODUCTS
+// ============================================================
+async function fetchProducts() {
+    try {
+        const snapshot = await db.collection('products').get();
+        products = [];
+        snapshot.forEach(doc => {
+            products.push({ id: doc.id, ...doc.data() });
+        });
+        products.sort((a, b) => {
+            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return bTime - aTime;
+        });
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        products = [];
+    }
+}
+
+// ============================================================
+// TELEGRAM SETTINGS
+// ============================================================
+async function loadTelegramSettings() {
+    try {
+        const doc = await db.collection('settings').doc('telegram').get();
+        if (doc.exists && doc.data().username) {
+            telegramUsername = doc.data().username;
+        } else {
+            telegramUsername = "";
+        }
+    } catch (error) {
+        console.error('Error loading telegram:', error);
+        telegramUsername = "";
+    }
+}
+
+async function saveTelegramToFirestore(username) {
+    await db.collection('settings').doc('telegram').set({
+        username: username,
+        updated_at: new Date().toISOString()
+    }, { merge: true });
+}
+
+function openTelegramSettings() {
+    const input = document.getElementById("telegramUsername");
+    input.value = telegramUsername;
+    document.getElementById("tgPreview").textContent = telegramUsername ? "@" + telegramUsername : "@username";
+    document.getElementById("telegramModal").classList.add("active");
+}
+
+async function saveTelegramSettings(event) {
+    const val = document.getElementById("telegramUsername").value.trim().replace(/^@/, "");
+    if (!val) {
+        showToast("សូមបញ្ចូល Telegram username", "error");
+        return;
+    }
+    
+    const saveBtn = event ? event.target : null;
+    if (saveBtn) saveBtn.disabled = true;
+    
+    try {
+        telegramUsername = val;
+        await saveTelegramToFirestore(val);
+        closeModal("telegramModal");
+        showToast("បានរក្សាទុក Telegram username លើ Cloud", "success");
+    } catch (error) {
+        console.error('Save telegram error:', error);
+        showToast("មិនអាចរក្សាទុកបានទេ", "error");
+    } finally {
+        if (saveBtn) saveBtn.disabled = false;
+    }
+}
+
+// ============================================================
+// ORDER TYPES
+// ============================================================
+async function loadOrderTypes() {
+    try {
+        const doc = await db.collection('settings').doc('orderTypes').get();
+        if (doc.exists && doc.data().types) {
+            const saved = doc.data().types;
+            orderTypes = DEFAULT_ORDER_TYPES.map(def => {
+                const found = saved.find(s => s.id === def.id);
+                return found ? { ...def, enabled: !!found.enabled } : def;
+            });
+        } else {
+            orderTypes = [...DEFAULT_ORDER_TYPES];
+            await saveOrderTypesToFirestore();
+        }
+    } catch (error) {
+        console.error('Error loading order types:', error);
+        orderTypes = [...DEFAULT_ORDER_TYPES];
+    }
+}
+
+async function saveOrderTypesToFirestore() {
+    const dataToSave = orderTypes.map(t => ({ id: t.id, enabled: t.enabled }));
+    await db.collection('settings').doc('orderTypes').set({
+        types: dataToSave,
+        updated_at: new Date().toISOString()
+    }, { merge: true });
+}
+
+async function toggleOrderType(id, enabled) {
+    const enabledCount = orderTypes.filter(t => t.enabled).length;
+    if (!enabled && enabledCount <= 1) {
+        showToast("ត្រូវមានប្រភេទការទទួលយ៉ាងតិចមួយ", "error");
+        renderOrderTypeList();
+        return;
+    }
+    
+    const idx = orderTypes.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    
+    const previousValue = orderTypes[idx].enabled;
+    orderTypes[idx].enabled = enabled;
+    renderOrderTypeList();
+    
+    try {
+        await saveOrderTypesToFirestore();
+        showToast(
+            enabled ? "បានបើក " + orderTypes[idx].label : "បានបិទ " + orderTypes[idx].label,
+            "success"
+        );
+    } catch (error) {
+        console.error('Toggle order type error:', error);
+        orderTypes[idx].enabled = previousValue;
+        renderOrderTypeList();
+        showToast("មិនអាចរក្សាទុកបានទេ", "error");
+    }
+}
+
+function openOrderTypeSettings() {
+    renderOrderTypeList();
+    applyAutoScrollState();
+    document.getElementById("orderTypeModal").classList.add("active");
+}
+
+// ============================================================
+// AUTO SCROLL SYSTEM (Fixed: Scroll up after reaching bottom)
+// ============================================================
+async function loadAutoScrollSettings() {
+    try {
+        const doc = await db.collection('settings').doc('autoScroll').get();
+        if (doc.exists) {
+            const data = doc.data();
+            pageAutoScrollEnabled = data.enabled === true;
+            pageScrollSpeed = Number(data.speed) || 0.7;
+        } else {
+            pageAutoScrollEnabled = false;
+            pageScrollSpeed = 0.7;
+            await saveAutoScrollSettings();
+        }
+    } catch (error) {
+        console.error('Load auto-scroll error:', error);
+        pageAutoScrollEnabled = false;
+        pageScrollSpeed = 0.7;
+    }
+}
+
+async function saveAutoScrollSettings() {
+    await db.collection('settings').doc('autoScroll').set({
+        enabled: pageAutoScrollEnabled,
+        speed: pageScrollSpeed,
+        updated_at: new Date().toISOString()
+    }, { merge: true });
+}
+
+function applyAutoScrollState() {
+    const btn = document.getElementById('autoScrollBtn');
+    const icon = document.getElementById('autoScrollIcon');
+    const settingsBox = document.getElementById('autoScrollSettings');
+    const toggle = document.getElementById('pageAutoScrollToggle');
+    const speedWrapper = document.getElementById('speedWrapper');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedValue = document.getElementById('speedValue');
+    
+    if (!btn || !icon) return;
+    
+    if (isAdmin) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+    
+    if (pageAutoScrollEnabled) {
+        btn.classList.add('active');
+        icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+        if (settingsBox) settingsBox.classList.add('enabled');
+        if (toggle) toggle.checked = true;
+        if (speedWrapper) speedWrapper.style.display = 'block';
+        if (speedSlider) speedSlider.value = pageScrollSpeed;
+        if (speedValue) speedValue.textContent = pageScrollSpeed.toFixed(1);
+        
+        startPageAutoScroll();
+    } else {
+        btn.classList.remove('active');
+        icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        if (settingsBox) settingsBox.classList.remove('enabled');
+        if (toggle) toggle.checked = false;
+        if (speedWrapper) speedWrapper.style.display = 'none';
+        
+        stopPageAutoScroll();
+    }
+}
+
+function getMaxScroll() {
+    return Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight
+    ) - window.innerHeight;
+}
+
+function getCurrentY() {
+    return window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+}
+
+function startPageAutoScroll() {
+    stopPageAutoScroll();
+    isUserInteracting = false;
+    
+    pageScrollInterval = setInterval(() => {
+        if (!pageAutoScrollEnabled) return;
+        if (isUserInteracting) return;
+        
+        const maxScroll = getMaxScroll();
+        if (maxScroll <= 0) return;
+        
+        const currentY = getCurrentY();
+        const tolerance = 3;
+        
+        // ===== Scroll Down (Direction = 1) =====
+        if (pageScrollDirection > 0) {
+            // ពិនិត្យដល់បាតក្រោម
+            if (currentY + tolerance >= maxScroll) {
+                window.scrollTo(0, maxScroll);
+                pauseAndReversePageScroll(-1);  // ប្តូរទិសឡើងលើ
+                return;
+            }
+            
+            const newY = Math.min(currentY + pageScrollSpeed, maxScroll);
+            window.scrollTo(0, newY);
+        }
+        // ===== Scroll Up (Direction = -1) =====
+        else {
+            // ពិនិត្យដល់ខាងលើ
+            if (currentY - tolerance <= 0) {
+                window.scrollTo(0, 0);
+                pauseAndReversePageScroll(1);  // ប្តូរទិសចុះក្រោម
+                return;
+            }
+            
+            const newY = Math.max(currentY - pageScrollSpeed, 0);
+            window.scrollTo(0, newY);
+        }
+    }, 16);
+}
+
+function pauseAndReversePageScroll(newDirection) {
+    clearInterval(pageScrollInterval);
+    pageScrollInterval = null;
+    
+    clearTimeout(pageScrollPauseTimeout);
+    pageScrollPauseTimeout = setTimeout(() => {
+        pageScrollDirection = newDirection;
+        if (pageAutoScrollEnabled) {
+            startPageAutoScroll();
+        }
+    }, PAGE_SCROLL_EDGE_DELAY);
+}
+
+function stopPageAutoScroll() {
+    if (pageScrollInterval) {
+        clearInterval(pageScrollInterval);
+        pageScrollInterval = null;
+    }
+    if (pageScrollPauseTimeout) {
+        clearTimeout(pageScrollPauseTimeout);
+        pageScrollPauseTimeout = null;
+    }
+}
+
+async function togglePageAutoScroll() {
+    if (!isAdmin) return;
+    
+    pageAutoScrollEnabled = !pageAutoScrollEnabled;
+    
+    try {
+        await saveAutoScrollSettings();
+        applyAutoScrollState();
+        showToast(
+            pageAutoScrollEnabled ? 'បើក Auto Scroll ទំព័រ' : 'បិទ Auto Scroll ទំព័រ',
+            'success'
+        );
+    } catch (error) {
+        console.error('Toggle error:', error);
+        showToast('មិនអាចរក្សាទុកបានទេ', 'error');
+        pageAutoScrollEnabled = !pageAutoScrollEnabled;
+    }
+}
+
+async function togglePageAutoScrollSetting(enabled) {
+    pageAutoScrollEnabled = enabled;
+    
+    try {
+        await saveAutoScrollSettings();
+        applyAutoScrollState();
+        showToast(
+            enabled ? 'បើក Auto Scroll សម្រាប់អ្នកទាំងអស់' : 'បិទ Auto Scroll',
+            'success'
+        );
+    } catch (error) {
+        console.error('Toggle setting error:', error);
+        showToast('មិនអាចរក្សាទុកបានទេ', 'error');
+        pageAutoScrollEnabled = !enabled;
+        applyAutoScrollState();
+    }
+}
+
+function updateSpeedValue(val) {
+    const speedValue = document.getElementById('speedValue');
+    if (speedValue) speedValue.textContent = Number(val).toFixed(1);
+}
+
+async function saveSpeedSetting(val) {
+    if (!isAdmin) return;
+    
+    pageScrollSpeed = Number(val);
+    
+    try {
+        await saveAutoScrollSettings();
+        showToast('បានរក្សាទុកល្បឿន ' + pageScrollSpeed.toFixed(1), 'success');
+    } catch (error) {
+        console.error('Save speed error:', error);
+        showToast('មិនអាចរក្សាទុកបានទេ', 'error');
+    }
+}
+
+// ===== User Interaction Handling =====
+function setupAutoScrollEvents() {
+    const startEvents = ['touchstart', 'mousedown', 'wheel'];
+    const endEvents = ['touchend', 'touchcancel', 'mouseup', 'mouseleave'];
+    
+    startEvents.forEach(evt => {
+        window.addEventListener(evt, onUserInteractStart, { passive: true });
+    });
+    
+    endEvents.forEach(evt => {
+        window.addEventListener(evt, onUserInteractEnd, { passive: true });
+    });
+    
+    window.addEventListener('keydown', () => {
+        onUserInteractStart();
+        onUserInteractEnd();
+    }, { passive: true });
+    
+    window.addEventListener('scroll', () => {
+        // បើអ្នកប្រើ Scroll ដោយដៃ
+        if (pageAutoScrollEnabled && !pageScrollInterval) {
+            onUserInteractStart();
+            onUserInteractEnd();
+        }
+    }, { passive: true });
+}
+
+function onUserInteractStart() {
+    if (!pageAutoScrollEnabled) return;
+    
+    isUserInteracting = true;
+    clearTimeout(interactionEndTimeout);
+    
+    if (pageScrollInterval) {
+        clearInterval(pageScrollInterval);
+        pageScrollInterval = null;
+    }
+    clearTimeout(pageScrollPauseTimeout);
+}
+
+function onUserInteractEnd() {
+    if (!pageAutoScrollEnabled) return;
+    
+    clearTimeout(interactionEndTimeout);
+    interactionEndTimeout = setTimeout(() => {
+        isUserInteracting = false;
+        if (pageAutoScrollEnabled && !pageScrollInterval) {
+            startPageAutoScroll();
+        }
+    }, PAGE_SCROLL_IDLE_DELAY);
+}
+
+// ===== Detect Page Height Change =====
+function detectPageHeightChange() {
+    const checkHeight = () => {
+        const currentHeight = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight
+        );
+        
+        if (currentHeight !== lastScrollHeight) {
+            lastScrollHeight = currentHeight;
+            if (pageAutoScrollEnabled && !pageScrollInterval && !isUserInteracting) {
+                startPageAutoScroll();
+            }
+        }
+    };
+    
+    if (heightCheckInterval) clearInterval(heightCheckInterval);
+    heightCheckInterval = setInterval(checkHeight, 500);
+    
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+        if (!img.complete) {
+            img.addEventListener('load', checkHeight);
+            img.addEventListener('error', checkHeight);
+        }
+    });
+    
+    window.addEventListener('resize', checkHeight);
+    window.addEventListener('load', checkHeight);
+}
+
+// ============================================================
+// LOCAL STORAGE
+// ============================================================
+function loadCart() {
+    const stored = localStorage.getItem(STORAGE_KEYS.cart);
+    if (stored) {
+        try { cart = JSON.parse(stored); } catch(e) { cart = []; }
+    } else { cart = []; }
+}
+
+function saveCartToStorage() {
+    localStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(cart));
+}
+
+function loadAdmin() {
+    isAdmin = localStorage.getItem(STORAGE_KEYS.admin) === "true";
+}
+
+function saveAdmin(status) {
+    if (status) localStorage.setItem(STORAGE_KEYS.admin, "true");
+    else localStorage.removeItem(STORAGE_KEYS.admin);
+    isAdmin = status;
+}
+
+// ============================================================
+// ORDER TYPE ICONS
+// ============================================================
+function getOrderTypeIcon(iconName) {
+    const icons = {
+        table: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h18"/><path d="M5 10v10"/><path d="M19 10v10"/><path d="M12 10v4"/><path d="M9 4h6"/><path d="M12 4v6"/></svg>',
+        bag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+        truck: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'
+    };
+    return icons[iconName] || icons.bag;
+}
+
+function renderOrderTypeList() {
+    const container = document.getElementById("orderTypeList");
+    if (!container) return;
+    container.innerHTML = "";
+    orderTypes.forEach(type => {
+        const item = document.createElement("div");
+        item.className = "order-type-item" + (type.enabled ? " enabled" : "");
+        
+        const info = document.createElement("div");
+        info.className = "order-type-info";
+        
+        const icon = document.createElement("div");
+        icon.className = "order-type-icon";
+        icon.innerHTML = getOrderTypeIcon(type.icon);
+        info.appendChild(icon);
+        
+        const textDiv = document.createElement("div");
+        textDiv.style.minWidth = "0";
+        const name = document.createElement("div");
+        name.className = "order-type-name";
+        name.textContent = type.label;
+        const desc = document.createElement("div");
+        desc.className = "order-type-desc";
+        desc.textContent = type.desc;
+        textDiv.appendChild(name);
+        textDiv.appendChild(desc);
+        info.appendChild(textDiv);
+        item.appendChild(info);
+        
+        const switchLabel = document.createElement("label");
+        switchLabel.className = "switch";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = type.enabled;
+        checkbox.onchange = () => toggleOrderType(type.id, checkbox.checked);
+        const slider = document.createElement("span");
+        slider.className = "slider";
+        switchLabel.appendChild(checkbox);
+        switchLabel.appendChild(slider);
+        item.appendChild(switchLabel);
+        
+        container.appendChild(item);
+    });
+}
+
+function getEnabledOrderTypes() {
+    return orderTypes.filter(t => t.enabled);
+}
+
+function populateOrderTypeSelect() {
+    const select = document.getElementById("orderType");
+    const enabled = getEnabledOrderTypes();
+    select.innerHTML = "";
+    enabled.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = t.label;
+        select.appendChild(opt);
+    });
+    const group = document.getElementById("orderTypeGroup");
+    if (enabled.length <= 1) {
+        group.style.display = "none";
+    } else {
+        group.style.display = "block";
+    }
+    toggleAddress();
+}
+
+// ============================================================
+// ADMIN UI
+// ============================================================
+function updateAdminUI() {
+    const panel = document.getElementById("adminPanel");
+    if (isAdmin) panel.classList.add("visible");
+    else panel.classList.remove("visible");
+}
+
+function toggleLogin() {
+    if (isAdmin) logout();
+    else {
+        document.getElementById("username").value = "";
+        document.getElementById("password").value = "";
+        document.getElementById("password").type = "password";
+        document.getElementById("loginModal").classList.add("active");
+        setTimeout(() => document.getElementById("username").focus(), 100);
+    }
+}
+
+function togglePasswordVisibility() {
+    const input = document.getElementById("password");
+    const icon = document.getElementById("eyeIcon");
+    if (input.type === "password") {
+        input.type = "text";
+        icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    } else {
+        input.type = "password";
+        icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+}
+
+// ============================================================
+// LOGIN → PIN FLOW
+// ============================================================
+function login() {
+    const username = document.getElementById("username").value.trim().toLowerCase();
+    const password = document.getElementById("password").value.trim();
+    
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        closeModal("loginModal");
+        document.getElementById("username").value = "";
+        document.getElementById("password").value = "";
+        document.getElementById("password").type = "password";
+        
+        setTimeout(() => openPinScreen(), 300);
+        showToast("សូមបញ្ចូលលេខកូដ 4 ខ្ទង់", "success");
+    } else {
+        showToast("ព័ត៌មានចូលប្រព័ន្ធមិនត្រឹមត្រូវ", "error");
+    }
+}
+
+function logout() {
+    saveAdmin(false);
+    updateAdminUI();
+    renderProducts();
+    applyAutoScrollState();
+    currentPin = "";
+    pinAttempts = 0;
+    showToast("បានចេញពីប្រព័ន្ធ", "success");
+}
+
+// ============================================================
+// PIN SCREEN LOGIC
+// ============================================================
+function openPinScreen() {
+    currentPin = "";
+    pinAttempts = 0;
+    document.getElementById("pinError").textContent = "";
+    updatePinDots();
+    document.getElementById("pinModal").classList.add("active");
+}
+
+function updatePinDots() {
+    const dots = document.querySelectorAll("#pinDots .pin-dot");
+    dots.forEach((dot, index) => {
+        if (index < currentPin.length) dot.classList.add("filled");
+        else dot.classList.remove("filled");
+    });
+}
+
+function handlePinInput(num) {
+    if (currentPin.length >= PIN_LENGTH) return;
+    currentPin += num;
+    updatePinDots();
+    if (currentPin.length === PIN_LENGTH) setTimeout(checkPin, 200);
+}
+
+function handlePinDelete() {
+    if (currentPin.length === 0) return;
+    currentPin = currentPin.slice(0, -1);
+    updatePinDots();
+    document.getElementById("pinError").textContent = "";
+}
+
+function handlePinCancel() {
+    currentPin = "";
+    pinAttempts = 0;
+    updatePinDots();
+    closeModal("pinModal");
+    saveAdmin(false);
+    updateAdminUI();
+    renderProducts();
+    applyAutoScrollState();
+    showToast("បានបោះបង់ការចូលប្រព័ន្ធ", "error");
+}
+
+function checkPin() {
+    if (currentPin === ADMIN_PIN) {
+        pinAttempts = 0;
+        currentPin = "";
+        closeModal("pinModal");
+        saveAdmin(true);
+        updateAdminUI();
+        renderProducts();
+        applyAutoScrollState();
+        showToast("ចូលប្រព័ន្ធដោយជោគជ័យ", "success");
+    } else {
+        pinAttempts++;
+        const box = document.getElementById("pinModalBox");
+        box.classList.add("pin-shake");
+        setTimeout(() => box.classList.remove("pin-shake"), 400);
+        
+        const errorEl = document.getElementById("pinError");
+        const remaining = MAX_PIN_ATTEMPTS - pinAttempts;
+        
+        if (pinAttempts >= MAX_PIN_ATTEMPTS) {
+            errorEl.textContent = "លេខកូដខុសពេក! ចាកចេញ...";
+            setTimeout(() => handlePinCancel(), 1500);
+        } else {
+            errorEl.textContent = "លេខកូដមិនត្រឹមត្រូវ (" + remaining + " ដងទៀត)";
+            currentPin = "";
+            updatePinDots();
+        }
+    }
+}
+
+function setupPinKeypad() {
+    const keypad = document.getElementById("pinKeypad");
+    if (!keypad) return;
+    
+    keypad.addEventListener("click", (e) => {
+        const key = e.target.closest(".pin-key");
+        if (!key) return;
+        
+        const num = key.dataset.num;
+        const action = key.dataset.action;
+        
+        if (num !== undefined) handlePinInput(num);
+        else if (action === "delete") handlePinDelete();
+        else if (action === "cancel") handlePinCancel();
+    });
+    
+    document.addEventListener("keydown", (e) => {
+        const pinModal = document.getElementById("pinModal");
+        if (!pinModal.classList.contains("active")) return;
+        
+        if (e.key >= "0" && e.key <= "9") handlePinInput(e.key);
+        else if (e.key === "Backspace") { e.preventDefault(); handlePinDelete(); }
+        else if (e.key === "Escape") handlePinCancel();
+    });
+}
+
+// ============================================================
+// CATEGORY FUNCTIONS
+// ============================================================
+function renderCategoryFilters() {
+    const list = document.getElementById("categoryList");
+    list.querySelectorAll("[data-cat]:not([data-cat='all'])").forEach(btn => btn.remove());
+    categories.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.className = "category" + (cat.id === currentCategory ? " active" : "");
+        btn.dataset.cat = cat.id;
+        btn.textContent = cat.name;
+        btn.onclick = () => filterCategory(cat.id, btn);
+        list.appendChild(btn);
+    });
+}
+
+function populateCategorySelect(selectedValue) {
+    const select = document.getElementById("productCategory");
+    select.innerHTML = "";
+    if (!categories.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "សូមបន្ថែមប្រភេទជាមុន";
+        select.appendChild(opt);
+        return;
+    }
+    categories.forEach(cat => {
+        const opt = document.createElement("option");
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        select.appendChild(opt);
+    });
+    if (selectedValue) select.value = selectedValue;
+}
+
+function openCategoryManager() {
+    renderCategoryManagerList();
+    document.getElementById("newCategoryName").value = "";
+    document.getElementById("categoryModal").classList.add("active");
+}
+
+function renderCategoryManagerList() {
+    const container = document.getElementById("categoryManagerList");
+    container.innerHTML = "";
+    if (!categories.length) {
+        container.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px;text-align:center">មិនមានប្រភេទ — សូមបន្ថែមថ្មី</div>';
+        return;
+    }
+    categories.forEach(cat => {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:13px;font-weight:600;gap:10px";
+        const span = document.createElement("span");
+        span.textContent = cat.name;
+        span.style.cssText = "flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
+        const delBtn = document.createElement("button");
+        delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> លុប';
+        delBtn.style.cssText = "border:0;background:var(--danger);color:#fff;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;flex-shrink:0;cursor:pointer;display:flex;align-items:center;gap:4px";
+        delBtn.onclick = () => deleteCategory(cat.id);
+        row.appendChild(span);
+        row.appendChild(delBtn);
+        container.appendChild(row);
+    });
+}
+
+async function addCategory() {
+    const input = document.getElementById("newCategoryName");
+    const name = input.value.trim();
+    if (!name) {
+        showToast("សូមបញ្ចូលឈ្មោះប្រភេទ", "error");
+        return;
+    }
+    const exists = categories.some(c => c.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+        showToast("ប្រភេទនេះមានរួចហើយ", "error");
+        return;
+    }
+    const newCategory = {
+        id: 'cat_' + Date.now(),
+        name: name,
+        created_at: new Date().toISOString()
+    };
+    try {
+        await db.collection('categories').doc(newCategory.id).set({
+            name: newCategory.name,
+            created_at: newCategory.created_at
+        });
+        categories.push(newCategory);
+        renderCategoryFilters();
+        renderCategoryManagerList();
+        populateCategorySelect();
+        input.value = "";
+        showToast("បានបន្ថែមប្រភេទ", "success");
+    } catch (error) {
+        console.error('Add category error:', error);
+        showToast("មិនអាចបន្ថែមប្រភេទបានទេ", "error");
+    }
+}
+
+async function deleteCategory(id) {
+    const inUse = products.some(p => p.category === id);
+    if (inUse) {
+        showToast("មិនអាចលុបបានទេ ព្រោះមានទំនិញកំពុងប្រើប្រភេទនេះ", "error");
+        return;
+    }
+    const cat = categories.find(c => c.id === id);
+    const confirmed = await showConfirm('តើអ្នកពិតជាចង់លុបប្រភេទ "' + (cat ? cat.name : "") + '" មែនទេ?');
+    if (!confirmed) return;
+    
+    try {
+        await db.collection('categories').doc(id).delete();
+        categories = categories.filter(c => c.id !== id);
+        if (currentCategory === id) currentCategory = "all";
+        renderCategoryFilters();
+        renderCategoryManagerList();
+        populateCategorySelect();
+        renderProducts();
+        showToast("បានលុបប្រភេទ", "success");
+    } catch (error) {
+        console.error('Delete category error:', error);
+        showToast("មិនអាចលុបបានទេ", "error");
+    }
+}
+
+// ============================================================
+// PRODUCTS RENDER
+// ============================================================
+function renderProducts() {
+    const grid = document.getElementById("menuGrid");
+    grid.innerHTML = "";
+    let filtered = [...products];
+    if (currentCategory !== "all") {
+        filtered = filtered.filter(item => item.category === currentCategory);
+    }
+    if (currentSearch) {
+        const q = currentSearch.toLowerCase();
+        filtered = filtered.filter(item =>
+            item.name.toLowerCase().includes(q) ||
+            (item.info || "").toLowerCase().includes(q)
+        );
+    }
+    document.getElementById("resultCount").textContent = filtered.length + " items";
+    if (!filtered.length) {
+        grid.innerHTML = '<div class="empty-state">' +
+            '<div class="empty-icon">' +
+            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">' +
+            '<circle cx="11" cy="11" r="7"/>' +
+            '<path d="m20 20-4-4"/>' +
+            '</svg></div>' +
+            '<h3>មិនមានទំនិញ</h3>' +
+            '<p>មិនមានលទ្ធផលដែលត្រូវនឹងការស្វែងរករបស់អ្នក</p>' +
+            '</div>';
+        return;
+    }
+    filtered.forEach(product => grid.appendChild(createProductCard(product)));
+}
+
+function createProductCard(product) {
+    const card = document.createElement("article");
+    card.className = "menu-card";
+    const discount = product.old_price && product.old_price > product.price
+        ? Math.round((1 - product.price / product.old_price) * 100)
+        : null;
+    const categoryName = getCategoryName(product.category);
+    
+    const imgWrapper = document.createElement("div");
+    imgWrapper.className = "product-image-wrapper";
+    imgWrapper.onclick = () => openProductDetail(product.id);
+    
+    let innerHTML = "";
+    if (discount) innerHTML += '<span class="discount">-' + discount + '%</span>';
+    innerHTML += '<span class="status ' + (product.status === "available" ? "available" : "unavailable") + '">' +
+        (product.status === "available" ? "មានលក់" : "អស់") + '</span>';
+    imgWrapper.innerHTML = innerHTML;
+    
+    const img = document.createElement("img");
+    img.className = "product-image";
+    img.src = product.image || 'https://via.placeholder.com/600x400?text=No+Image';
+    img.alt = product.name;
+    img.loading = "lazy";
+    img.onerror = function() { this.src = 'https://via.placeholder.com/600x400?text=No+Image'; };
+    imgWrapper.appendChild(img);
+    card.appendChild(imgWrapper);
+    
+    const content = document.createElement("div");
+    content.className = "product-content";
+    
+    const cat = document.createElement("div");
+    cat.className = "product-category";
+    cat.textContent = categoryName;
+    content.appendChild(cat);
+    
+    const name = document.createElement("h3");
+    name.className = "product-name";
+    name.textContent = product.name;
+    content.appendChild(name);
+    
+    const desc = document.createElement("p");
+    desc.className = "product-description";
+    desc.textContent = product.info || "";
+    content.appendChild(desc);
+    
+    const bottom = document.createElement("div");
+    bottom.className = "product-bottom";
+    
+    const priceBox = document.createElement("div");
+    priceBox.className = "price-box";
+    const currentPrice = document.createElement("span");
+    currentPrice.className = "current-price";
+    currentPrice.textContent = formatPrice(product.price);
+    priceBox.appendChild(currentPrice);
+    if (product.old_price) {
+        const oldPrice = document.createElement("span");
+        oldPrice.className = "old-price";
+        oldPrice.textContent = formatPrice(product.old_price);
+        priceBox.appendChild(oldPrice);
+    }
+    bottom.appendChild(priceBox);
+    
+    const addBtn = document.createElement("button");
+    addBtn.className = "add-btn";
+    addBtn.disabled = product.status !== "available";
+    addBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>';
+    addBtn.onclick = (e) => {
+        e.stopPropagation();
+        addToCart(product.id);
+    };
+    bottom.appendChild(addBtn);
+    
+    content.appendChild(bottom);
+    card.appendChild(content);
+    
+    if (isAdmin) {
+        const actions = document.createElement("div");
+        actions.className = "admin-actions";
+        
+        const editBtn = document.createElement("button");
+        editBtn.className = "admin-edit";
+        editBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> កែប្រែ';
+        editBtn.onclick = () => openEditProduct(product.id);
+        actions.appendChild(editBtn);
+        
+        const delBtn = document.createElement("button");
+        delBtn.className = "admin-delete";
+        delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> លុប';
+        delBtn.onclick = () => deleteProduct(product.id);
+        actions.appendChild(delBtn);
+        
+        card.appendChild(actions);
+    }
+    
+    return card;
+}
+
+function handleSearch(value) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentSearch = value.trim();
+        renderProducts();
+    }, 250);
+}
+
+function filterCategory(category, button) {
+    currentCategory = category;
+    document.querySelectorAll(".category").forEach(item => item.classList.remove("active"));
+    button.classList.add("active");
+    renderProducts();
+}
+
+function openProductDetail(id) {
+    const product = products.find(item => item.id === id);
+    if (!product) return;
+    detailProductId = id;
+    document.getElementById("detailImage").src = product.image || 'https://via.placeholder.com/600x400?text=No+Image';
+    document.getElementById("detailCategory").textContent = getCategoryName(product.category);
+    document.getElementById("detailTitle").textContent = product.name;
+    document.getElementById("detailDescription").textContent = product.info || "មិនមានព័ត៌មានលម្អិត";
+    document.getElementById("detailPrice").textContent = formatPrice(product.price);
+    const addBtn = document.getElementById("detailAddBtn");
+    addBtn.disabled = product.status !== "available";
+    addBtn.textContent = product.status === "available" ? "បន្ថែមទៅកន្ត្រក" : "ទំនិញអស់";
+    addBtn.onclick = () => {
+        if (product.status === "available") {
+            addToCart(product.id);
+            closeModal("detailModal");
+        }
+    };
+    document.getElementById("detailModal").classList.add("active");
+}
+
+// ============================================================
+// CART
+// ============================================================
+function addToCart(id) {
+    const product = products.find(item => item.id === id);
+    if (!product || product.status !== "available") {
+        showToast("ទំនិញនេះអស់", "error");
+        return;
+    }
+    const existing = cart.find(item => item.id === id);
+    if (existing) existing.qty += 1;
+    else cart.push({ id: id, qty: 1 });
+    saveCartToStorage();
+    updateCart();
+    showToast("បានបន្ថែមទៅកន្ត្រក", "success");
+}
+
+function updateCart() {
+    const count = cart.reduce((sum, item) => sum + item.qty, 0);
+    document.getElementById("cartCount").textContent = count;
+    const container = document.getElementById("cartItems");
+    container.innerHTML = "";
+    
+    if (!cart.length) {
+        container.innerHTML = '<div class="empty-state" style="padding:60px 10px">' +
+            '<div class="empty-icon">' +
+            '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">' +
+            '<circle cx="9" cy="20" r="1"/>' +
+            '<circle cx="19" cy="20" r="1"/>' +
+            '<path d="M3 4h2l2.5 11h10L21 7H6"/>' +
+            '</svg></div>' +
+            '<h3>កន្ត្រកទទេ</h3>' +
+            '<p>សូមជ្រើសរើសទំនិញ</p>' +
+            '</div>';
+    } else {
+        cart.forEach(item => {
+            const product = products.find(p => p.id === item.id);
+            if (!product) return;
+            const el = document.createElement("div");
+            el.className = "cart-item";
+            
+            const img = document.createElement("img");
+            img.className = "cart-item-image";
+            img.src = product.image || 'https://via.placeholder.com/600x400?text=No+Image';
+            img.alt = "";
+            el.appendChild(img);
+            
+            const info = document.createElement("div");
+            info.className = "cart-item-info";
+            
+            const name = document.createElement("div");
+            name.className = "cart-item-name";
+            name.textContent = product.name;
+            info.appendChild(name);
+            
+            const price = document.createElement("div");
+            price.className = "cart-item-price";
+            price.textContent = formatPrice(product.price);
+            info.appendChild(price);
+            
+            const qty = document.createElement("div");
+            qty.className = "quantity";
+            
+            const minusBtn = document.createElement("button");
+            minusBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14"/></svg>';
+            minusBtn.onclick = () => changeQuantity(product.id, -1);
+            qty.appendChild(minusBtn);
+            
+            const qtySpan = document.createElement("span");
+            qtySpan.textContent = item.qty;
+            qty.appendChild(qtySpan);
+            
+            const plusBtn = document.createElement("button");
+            plusBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14"/><path d="M5 12h14"/></svg>';
+            plusBtn.onclick = () => changeQuantity(product.id, 1);
+            qty.appendChild(plusBtn);
+            
+            info.appendChild(qty);
+            
+            const removeBtn = document.createElement("button");
+            removeBtn.className = "remove-item";
+            removeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg> លុបចេញ';
+            removeBtn.onclick = () => removeFromCart(product.id);
+            info.appendChild(removeBtn);
+            
+            el.appendChild(info);
+            container.appendChild(el);
+        });
+    }
+    
+    document.getElementById("cartTotal").textContent = formatPrice(getCartTotal());
+    document.getElementById("checkoutBtn").disabled = cart.length === 0;
+}
+
+function changeQuantity(id, change) {
+    const item = cart.find(p => p.id === id);
+    if (!item) return;
+    item.qty += change;
+    if (item.qty <= 0) cart = cart.filter(p => p.id !== id);
+    saveCartToStorage();
+    updateCart();
+}
+
+function removeFromCart(id) {
+    cart = cart.filter(item => item.id !== id);
+    saveCartToStorage();
+    updateCart();
+}
+
+function getCartTotal() {
+    return cart.reduce((total, item) => {
+        const product = products.find(p => p.id === item.id);
+        return total + (product ? product.price * item.qty : 0);
+    }, 0);
+}
+
+function openCart() {
+    document.getElementById("cartDrawer").classList.add("active");
+    document.getElementById("drawerOverlay").classList.add("active");
+}
+
+function closeCart() {
+    document.getElementById("cartDrawer").classList.remove("active");
+    document.getElementById("drawerOverlay").classList.remove("active");
+}
+
+// ============================================================
+// CHECKOUT
+// ============================================================
+function openCheckout() {
+    if (!cart.length) {
+        showToast("កន្ត្រករបស់អ្នកទទេ", "error");
+        return;
+    }
+    const enabled = getEnabledOrderTypes();
+    if (!enabled.length) {
+        showToast("អ្នកលក់មិនបានបើកប្រភេទការទទួលទេ", "error");
+        return;
+    }
+    const invalidItems = cart.filter(item => {
+        const p = products.find(prod => prod.id === item.id);
+        return !p || p.status !== "available";
+    });
+    if (invalidItems.length) {
+        showToast("មានទំនិញអស់ក្នុងកន្ត្រក សូមលុបចេញ", "error");
+        return;
+    }
+    document.getElementById("checkoutTotal").textContent = formatPrice(getCartTotal());
+    populateOrderTypeSelect();
+    closeCart();
+    document.getElementById("checkoutModal").classList.add("active");
+}
+
+function toggleAddress() {
+    const select = document.getElementById("orderType");
+    const type = select.value;
+    document.getElementById("tableGroup").style.display = type === "table" ? "block" : "none";
+    document.getElementById("addressGroup").style.display = type === "delivery" ? "block" : "none";
+}
+
+async function submitOrder() {
+    if (!cart.length) {
+        showToast("កន្ត្រកទទេ", "error");
+        return;
+    }
+    const name = document.getElementById("customerName").value.trim();
+    const phone = document.getElementById("customerPhone").value.trim();
+    const type = document.getElementById("orderType").value;
+    const table = document.getElementById("tableNumber").value.trim();
+    const address = document.getElementById("customerAddress").value.trim();
+    const note = document.getElementById("orderNote").value.trim();
+    
+    if (!name) {
+        showToast("សូមបញ្ចូលឈ្មោះអតិថិជន", "error");
+        return;
+    }
+    if (type === "table" && !table) {
+        showToast("សូមបញ្ចូលលេខតុ", "error");
+        return;
+    }
+    if (type === "delivery" && !address) {
+        showToast("សូមបញ្ចូលអាសយដ្ឋាន", "error");
+        return;
+    }
+    
+    const order = {
+        id: "ORD-" + Date.now(),
+        customer: name,
+        phone: phone,
+        type: type,
+        table: type === "table" ? table : "",
+        address: type === "delivery" ? address : "",
+        note: note,
+        items: [...cart],
+        total: getCartTotal(),
+        created_at: new Date().toISOString()
+    };
+    
+    try {
+        await db.collection('orders').doc(order.id).set(order);
+    } catch (error) {
+        console.warn('Cannot save order:', error.message);
+    }
+    
+    cart = [];
+    saveCartToStorage();
+    updateCart();
+    closeModal("checkoutModal");
+    ["customerName", "customerPhone", "tableNumber", "customerAddress", "orderNote"].forEach(id => {
+        document.getElementById(id).value = "";
+    });
+    showToast("ការបញ្ជាទិញ " + order.id + " បានជោគជ័យ", "success");
+    
+    if (telegramUsername) {
+        const msg = buildTelegramMessage(order);
+        const url = "https://t.me/" + encodeURIComponent(telegramUsername) + "?text=" + encodeURIComponent(msg);
+        setTimeout(() => {
+            const win = window.open(url, "_blank");
+            if (!win) showToast("សូមអនុញ្ញាត popup សម្រាប់ Telegram", "error");
+        }, 600);
+    }
+}
+
+function buildTelegramMessage(order) {
+    const typeObj = orderTypes.find(t => t.id === order.type);
+    const typeLabel = typeObj ? typeObj.label : order.type;
+    let itemLines = order.items.map(item => {
+        const product = products.find(p => p.id === item.id);
+        const name = product ? product.name : "ទំនិញ";
+        const price = product ? product.price * item.qty : 0;
+        return "  - " + name + " x" + item.qty + "  =  " + price.toLocaleString("en-US") + " រៀល";
+    }).join("\n");
+    
+    let msg = "ការបញ្ជាទិញថ្មី\n";
+    msg += "━━━━━━━━━━━━━━━\n";
+    msg += "ID: " + order.id + "\n";
+    msg += "អតិថិជន: " + order.customer + "\n";
+    if (order.phone) msg += "ទូរស័ព្ទ: " + order.phone + "\n";
+    msg += "ប្រភេទ: " + typeLabel + "\n";
+    if (order.type === "table" && order.table) msg += "តុ: " + order.table + "\n";
+    if (order.type === "delivery" && order.address) msg += "អាសយដ្ឋាន: " + order.address + "\n";
+    msg += "━━━━━━━━━━━━━━━\n";
+    msg += itemLines + "\n";
+    msg += "━━━━━━━━━━━━━━━\n";
+    msg += "សរុប: " + order.total.toLocaleString("en-US") + " រៀល\n";
+    if (order.note) msg += "ចំណាំ: " + order.note + "\n";
+    return msg;
+}
+
+// ============================================================
+// PRODUCT ADMIN
+// ============================================================
+function openAddProduct() {
+    if (!categories.length) {
+        showToast("សូមបន្ថែមប្រភេទជាមុន", "error");
+        return;
+    }
+    editingId = null;
+    clearProductForm();
+    populateCategorySelect(categories[0].id);
+    document.getElementById("productModalTitle").textContent = "បន្ថែមទំនិញ";
+    document.getElementById("productModal").classList.add("active");
+}
+
+function openEditProduct(id) {
+    const product = products.find(item => item.id === id);
+    if (!product) return;
+    editingId = id;
+    document.getElementById("productModalTitle").textContent = "កែប្រែទំនិញ";
+    document.getElementById("productName").value = product.name;
+    document.getElementById("productInfo").value = product.info || "";
+    document.getElementById("productPrice").value = product.price;
+    document.getElementById("productOldPrice").value = product.old_price || "";
+    populateCategorySelect(product.category);
+    document.getElementById("productStatus").value = product.status || "available";
+    document.getElementById("productImage").value = "";
+    document.getElementById("productModal").classList.add("active");
+}
+
+function clearProductForm() {
+    ["productName", "productInfo", "productPrice", "productOldPrice"].forEach(id => {
+        document.getElementById(id).value = "";
+    });
+    document.getElementById("productStatus").value = "available";
+    document.getElementById("productImage").value = "";
+}
+
+function compressImage(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                let width = img.width;
+                let height = img.height;
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+                const dataUrl = canvas.toDataURL("image/jpeg", quality);
+                resolve(dataUrl);
+            };
+            img.onerror = () => reject(new Error("មិនអាចអានរូបភាពបានទេ"));
+            img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error("មិនអាចអានរូបភាពបានទេ"));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function saveProduct(event) {
+    const name = document.getElementById("productName").value.trim();
+    const info = document.getElementById("productInfo").value.trim();
+    const price = Number(document.getElementById("productPrice").value);
+    const oldPrice = Number(document.getElementById("productOldPrice").value) || null;
+    const category = document.getElementById("productCategory").value;
+    const status = document.getElementById("productStatus").value;
+    const file = document.getElementById("productImage").files[0];
+    
+    if (!name || !price) {
+        showToast("សូមបញ្ចូលឈ្មោះ និងតម្លៃ", "error");
+        return;
+    }
+    if (!category) {
+        showToast("សូមជ្រើសរើសប្រភេទ", "error");
+        return;
+    }
+    
+    const saveBtn = event ? event.target : null;
+    if (saveBtn) saveBtn.disabled = true;
+    
+    try {
+        let imageUrl = null;
+        if (file) {
+            if (file.size > 3 * 1024 * 1024) {
+                throw new Error("រូបភាពត្រូវតូចជាង 3MB");
+            }
+            imageUrl = await compressImage(file, 800, 0.75);
+        }
+        
+        if (editingId) {
+            const index = products.findIndex(p => p.id === editingId);
+            if (index !== -1) {
+                const updatedProduct = Object.assign({}, products[index], {
+                    name: name,
+                    info: info,
+                    price: price,
+                    old_price: oldPrice,
+                    category: category,
+                    status: status,
+                    updated_at: new Date().toISOString()
+                });
+                if (imageUrl) updatedProduct.image = imageUrl;
+                
+                await db.collection('products').doc(editingId).set(updatedProduct);
+                products[index] = updatedProduct;
+            }
+            showToast("បានកែប្រែទំនិញ", "success");
+        } else {
+            if (!imageUrl) {
+                showToast("សូមជ្រើសរើសរូបភាព", "error");
+                return;
+            }
+            const newProduct = {
+                id: 'prod_' + Date.now(),
+                name: name,
+                info: info,
+                price: price,
+                old_price: oldPrice,
+                category: category,
+                status: status,
+                image: imageUrl,
+                created_at: new Date().toISOString()
+            };
+            await db.collection('products').doc(newProduct.id).set(newProduct);
+            products.unshift(newProduct);
+            showToast("បានបន្ថែមទំនិញ", "success");
+        }
+        
+        renderProducts();
+        closeModal("productModal");
+    } catch(e) {
+        console.error('Save product error:', e);
+        showToast(e.message || "មិនអាចរក្សាទុកទំនិញបានទេ", "error");
+    } finally {
+        if (saveBtn) saveBtn.disabled = false;
+    }
+}
+
+async function deleteProduct(id) {
+    if (!isAdmin) return;
+    const product = products.find(item => item.id === id);
+    if (!product) return;
+    const confirmed = await showConfirm('តើអ្នកពិតជាចង់លុប "' + product.name + '" មែនទេ?');
+    if (!confirmed) return;
+    
+    try {
+        await db.collection('products').doc(id).delete();
+        products = products.filter(p => p.id !== id);
+        cart = cart.filter(item => item.id !== id);
+        saveCartToStorage();
+        renderProducts();
+        updateCart();
+        showToast("បានលុបទំនិញ", "success");
+    } catch (error) {
+        console.error('Delete product error:', error);
+        showToast("មិនអាចលុបទំនិញបានទេ", "error");
+    }
+}
+
+// ============================================================
+// POSTER SYSTEM
+// ============================================================
+async function loadPosters() {
+    try {
+        const doc = await db.collection('settings').doc('posters').get();
+        if (doc.exists) {
+            const data = doc.data();
+            posters = data.list || [];
+            autoSlide = data.autoSlide !== false;
+            posterVisible = data.visible === true;
+        } else {
+            posters = [];
+            autoSlide = true;
+            posterVisible = false;
+            await savePostersToFirestore();
+        }
+    } catch (error) {
+        console.error('Load posters error:', error);
+        posters = [];
+        posterVisible = false;
+    }
+}
+
+async function savePostersToFirestore() {
+    await db.collection('settings').doc('posters').set({
+        list: posters,
+        autoSlide: autoSlide,
+        visible: posterVisible,
+        updated_at: new Date().toISOString()
+    }, { merge: true });
+}
+
+function renderPosters() {
+    const section = document.getElementById('posterSection');
+    const slider = document.getElementById('posterSlider');
+    const dots = document.getElementById('posterDots');
+    if (!section || !slider || !dots) return;
+    
+    if (!posterVisible || !posters.length) {
+        section.classList.remove('visible');
+        section.style.display = 'none';
+        if (slideInterval) clearInterval(slideInterval);
+        return;
+    }
+    
+    section.classList.add('visible');
+    section.style.display = 'block';
+    slider.innerHTML = '';
+    dots.innerHTML = '';
+    
+    posters.forEach((poster, index) => {
+        const slide = document.createElement('div');
+        slide.className = 'poster-slide' + (index === 0 ? ' active' : '');
+        
+        const img = document.createElement('img');
+        img.src = poster.image;
+        img.alt = 'Poster ' + (index + 1);
+        img.loading = index === 0 ? 'eager' : 'lazy';
+        img.onerror = function() { this.src = 'https://via.placeholder.com/1200x525?text=Poster'; };
+        img.onload = () => {
+            if (pageAutoScrollEnabled && !pageScrollInterval) {
+                startPageAutoScroll();
+            }
+        };
+        
+        slide.appendChild(img);
+        slider.appendChild(slide);
+        
+        if (posters.length > 1) {
+            const dot = document.createElement('button');
+            dot.className = 'poster-dot' + (index === 0 ? ' active' : '');
+            dot.onclick = () => goToSlide(index);
+            dots.appendChild(dot);
+        }
+    });
+    
+    currentSlide = 0;
+    startSlider();
+}
+
+function goToSlide(index) {
+    const slides = document.querySelectorAll('.poster-slide');
+    const dots = document.querySelectorAll('.poster-dot');
+    if (!slides.length) return;
+    
+    slides[currentSlide].classList.remove('active');
+    if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
+    
+    currentSlide = index;
+    
+    slides[currentSlide].classList.add('active');
+    if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+    
+    startSlider();
+}
+
+function nextSlide() {
+    if (posters.length < 2) return;
+    goToSlide((currentSlide + 1) % posters.length);
+}
+
+function startSlider() {
+    if (slideInterval) clearInterval(slideInterval);
+    if (autoSlide && posters.length > 1 && posterVisible) {
+        slideInterval = setInterval(nextSlide, 4000);
+    }
+}
+
+let touchStartX = 0;
+function setupPosterSwipe() {
+    const slider = document.getElementById('posterSlider');
+    if (!slider) return;
+    
+    slider.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    slider.addEventListener('touchend', e => {
+        const diff = touchStartX - e.changedTouches[0].screenX;
+        if (Math.abs(diff) > 50 && posters.length > 1 && posterVisible) {
+            if (diff > 0) goToSlide((currentSlide + 1) % posters.length);
+            else goToSlide((currentSlide - 1 + posters.length) % posters.length);
+        }
+    }, { passive: true });
+}
+
+// ============================================================
+// POSTER MANAGER
+// ============================================================
+function openPosterManager() {
+    renderPosterManagerList();
+    document.getElementById('posterVisibleToggle').checked = posterVisible;
+    document.getElementById('autoSlideToggle').checked = autoSlide;
+    document.getElementById('posterManagerModal').classList.add('active');
+}
+
+function renderPosterManagerList() {
+    const container = document.getElementById('posterManagerList');
+    container.innerHTML = '';
+    
+    if (!posters.length) {
+        container.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">មិនមានរូបភាព — ចុច "+ បន្ថែមរូបភាពថ្មី"</div>';
+        return;
+    }
+    
+    posters.forEach((poster, index) => {
+        const row = document.createElement('div');
+        row.className = 'poster-row';
+        
+        const thumb = document.createElement('img');
+        thumb.className = 'poster-row-thumb';
+        thumb.src = poster.image;
+        thumb.onerror = function() { this.src = 'https://via.placeholder.com/144x88?text=No+Img'; };
+        row.appendChild(thumb);
+        
+        const info = document.createElement('div');
+        info.className = 'poster-row-info';
+        const titleEl = document.createElement('div');
+        titleEl.className = 'poster-row-title';
+        titleEl.textContent = 'រូបភាពទី ' + (index + 1);
+        info.appendChild(titleEl);
+        row.appendChild(info);
+        
+        const actions = document.createElement('div');
+        actions.className = 'poster-row-actions';
+        
+        const editBtn = document.createElement('button');
+        editBtn.className = 'poster-row-edit';
+        editBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> ប្តូរ';
+        editBtn.onclick = () => openPosterForm(poster.id);
+        actions.appendChild(editBtn);
+        
+        const delBtn = document.createElement('button');
+        delBtn.className = 'poster-row-delete';
+        delBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg> លុប';
+        delBtn.onclick = () => deletePoster(poster.id);
+        actions.appendChild(delBtn);
+        
+        row.appendChild(actions);
+        container.appendChild(row);
+    });
+}
+
+function openPosterForm(id) {
+    editingPosterId = id || null;
+    document.getElementById('posterFormTitle').textContent = id ? 'ប្តូររូបភាព' : 'បន្ថែមរូបភាព';
+    document.getElementById('posterImage').value = '';
+    document.getElementById('posterFormModal').classList.add('active');
+}
+
+async function savePoster(event) {
+    const file = document.getElementById('posterImage').files[0];
+    
+    if (!editingPosterId && !file) {
+        showToast('សូមជ្រើសរើសរូបភាព', 'error');
+        return;
+    }
+    
+    const saveBtn = event ? event.target : null;
+    if (saveBtn) saveBtn.disabled = true;
+    
+    try {
+        let imageUrl = null;
+        if (file) {
+            if (file.size > 3 * 1024 * 1024) throw new Error('រូបភាពត្រូវតូចជាង 3MB');
+            imageUrl = await compressImage(file, 1200, 0.85);
+        }
+        
+        if (editingPosterId) {
+            const idx = posters.findIndex(p => p.id === editingPosterId);
+            if (idx !== -1 && imageUrl) {
+                posters[idx].image = imageUrl;
+            }
+            showToast('បានប្តូររូបភាព', 'success');
+        } else {
+            posters.push({
+                id: 'poster_' + Date.now(),
+                image: imageUrl
+            });
+            showToast('បានបន្ថែមរូបភាព', 'success');
+        }
+        
+        if (!posterVisible && posters.length > 0) {
+            posterVisible = true;
+            document.getElementById('posterVisibleToggle').checked = true;
+        }
+        
+        await savePostersToFirestore();
+        renderPosters();
+        renderPosterManagerList();
+        closeModal('posterFormModal');
+    } catch (err) {
+        console.error('Save poster error:', err);
+        showToast(err.message || 'មិនអាចរក្សាទុកបានទេ', 'error');
+    } finally {
+        if (saveBtn) saveBtn.disabled = false;
+    }
+}
+
+async function deletePoster(id) {
+    const ok = await showConfirm('តើអ្នកពិតជាចង់លុបរូបភាពនេះ មែនទេ?');
+    if (!ok) return;
+    
+    try {
+        posters = posters.filter(x => x.id !== id);
+        if (!posters.length) posterVisible = false;
+        
+        await savePostersToFirestore();
+        renderPosters();
+        renderPosterManagerList();
+        document.getElementById('posterVisibleToggle').checked = posterVisible;
+        showToast('បានលុបរូបភាព', 'success');
+    } catch (err) {
+        console.error('Delete poster error:', err);
+        showToast('មិនអាចលុបបានទេ', 'error');
+    }
+}
+
+async function toggleAutoSlide(enabled) {
+    autoSlide = enabled;
+    try {
+        await savePostersToFirestore();
+        startSlider();
+        showToast(enabled ? 'បើកការរត់ស្វ័យប្រវត្តិ' : 'បិទការរត់', 'success');
+    } catch (err) {
+        console.error('Toggle auto-slide error:', err);
+        showToast('មិនអាចរក្សាទុកបានទេ', 'error');
+    }
+}
+
+async function togglePosterVisible(enabled) {
+    posterVisible = enabled;
+    try {
+        await savePostersToFirestore();
+        renderPosters();
+        showToast(enabled ? 'បង្ហាញរូបភាព' : 'លាក់រូបភាព', 'success');
+    } catch (err) {
+        console.error('Toggle poster visible error:', err);
+        showToast('មិនអាចរក្សាទុកបានទេ', 'error');
+    }
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function showConfirm(message) {
+    return new Promise(resolve => {
+        confirmResolver = resolve;
+        document.getElementById("confirmMessage").textContent = message;
+        document.getElementById("confirmModal").classList.add("active");
+    });
+}
+
+function closeConfirm(result) {
+    document.getElementById("confirmModal").classList.remove("active");
+    if (confirmResolver) {
+        confirmResolver(result);
+        confirmResolver = null;
+    }
+}
+
+function formatPrice(price) {
+    return Number(price).toLocaleString("en-US") + " រៀល";
+}
+
+function getCategoryName(categoryId) {
+    const found = categories.find(c => c.id === categoryId);
+    return found ? found.name : "ផ្សេងៗ";
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove("active");
+}
+
+function showToast(message, type) {
+    type = type || "success";
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.className = "toast " + type + " show";
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
+document.addEventListener("click", event => {
+    if (event.target.classList.contains("modal-overlay")) {
+        if (event.target.id === "confirmModal") {
+            closeConfirm(false);
+        } else if (event.target.id === "pinModal") {
+            return;
+        } else {
+            event.target.classList.remove("active");
+        }
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        document.querySelectorAll(".modal-overlay").forEach(modal => {
+            if (modal.id !== "pinModal") modal.classList.remove("active");
+        });
+        closeCart();
+    }
+    if (event.key === "Enter") {
+        if (document.getElementById("loginModal").classList.contains("active")) {
+            login();
+        }
+    }
+});
+</script>
+
+</body>
+</html>
